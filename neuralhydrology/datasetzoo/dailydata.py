@@ -190,39 +190,39 @@ def load_daily_forcings(data_dir: Path, basin: str, forcings: str) -> Tuple[pd.D
     return df, area
 
 
-def load_daily_discharge(data_dir: Path, basin: str, area: int) -> pd.Series:
-    """Load the discharge data for a basin of the CAMELS US data set.
+# def load_daily_discharge(data_dir: Path, basin: str, area: int) -> pd.Series:
+#     """Load the discharge data for a basin of the CAMELS US data set.
 
-    Parameters
-    ----------
-    data_dir : Path
-        Path to the CAMELS US directory. This folder must contain a 'usgs_streamflow' folder with 18
-        subdirectories (for the 18 HUCS) as in the original CAMELS data set. In each HUC folder are the discharge files 
-        (.txt), starting with the 8-digit basin id.
-    basin : str
-        8-digit USGS identifier of the basin.
-    area : int
-        Catchment area (m2), used to normalize the discharge.
+#     Parameters
+#     ----------
+#     data_dir : Path
+#         Path to the CAMELS US directory. This folder must contain a 'usgs_streamflow' folder with 18
+#         subdirectories (for the 18 HUCS) as in the original CAMELS data set. In each HUC folder are the discharge files 
+#         (.txt), starting with the 8-digit basin id.
+#     basin : str
+#         8-digit USGS identifier of the basin.
+#     area : int
+#         Catchment area (m2), used to normalize the discharge.
 
-    Returns
-    -------
-    pd.Series
-        Time-index pandas.Series of the discharge values (mm/day)
-    """
+#     Returns
+#     -------
+#     pd.Series
+#         Time-index pandas.Series of the discharge values (mm/day)
+#     """
 
-    discharge_path = data_dir / 'streamflow'
-    file_path = list(discharge_path.glob(f'**/{basin}_streamflow_qc.txt'))
-    if file_path:
-        file_path = file_path[0]
-    else:
-        raise FileNotFoundError(f'No file for Basin {basin} at {file_path}')
+#     discharge_path = data_dir / 'streamflow'
+#     file_path = list(discharge_path.glob(f'**/{basin}_streamflow_qc.txt'))
+#     if file_path:
+#         file_path = file_path[0]
+#     else:
+#         raise FileNotFoundError(f'No file for Basin {basin} at {file_path}')
 
-    col_names = ['basin', 'Year', 'Mnth', 'Day', 'QObs', 'flag']
-    df = pd.read_csv(file_path, sep='\s+', header=None, names=col_names)
-    df["date"] = pd.to_datetime(df.Year.map(str) + "/" + df.Mnth.map(str) + "/" + df.Day.map(str), format="%Y/%m/%d")
-    df = df.set_index("date")
+#     col_names = ['basin', 'Year', 'Mnth', 'Day', 'QObs', 'flag']
+#     df = pd.read_csv(file_path, sep='\s+', header=None, names=col_names)
+#     df["date"] = pd.to_datetime(df.Year.map(str) + "/" + df.Mnth.map(str) + "/" + df.Day.map(str), format="%Y/%m/%d")
+#     df = df.set_index("date")
 
-    # normalize discharge from cubic feet per second to mm per day
-    df.QObs = 28316846.592 * df.QObs * 86400 / (area * 10**6)
+#     # normalize discharge from cubic feet per second to mm per day
+#     df.QObs = 28316846.592 * df.QObs * 86400 / (area * 10**6)
 
-    return df.QObs
+#     return df.QObs

@@ -64,10 +64,11 @@ class HourlyData(dailydata.DailyData):
 
     def _load_basin_data(self, basin: str) -> pd.DataFrame:
         """Load input and output data from text files."""
-        # get forcings
+        ## Load the data.
         dfs = []
-        if not any(f.endswith('_hourly') for f in self.cfg.forcings):
+        if not any(f.endswith('_hourly') for f in self.cfg.forcings): # Check hourly data exists
             raise ValueError('Forcings include no hourly forcings set.')
+        # Sort out which forcings have hourly data, and which will need to be upsampled.
         for forcing in self.cfg.forcings:
             if forcing[-7:] == '_hourly':
                 df = self.load_hourly_data(basin, forcing)
@@ -81,21 +82,22 @@ class HourlyData(dailydata.DailyData):
             dfs.append(df)
         df = pd.concat(dfs, axis=1)
 
-        # collapse all input features to a single list, to check for 'QObs(mm/d)'.
-        all_features = self.cfg.target_variables
-        if isinstance(self.cfg.dynamic_inputs, dict):
-            for val in self.cfg.dynamic_inputs.values():
-                all_features = all_features + val
-        elif isinstance(self.cfg.dynamic_inputs, list):
-            all_features = all_features + self.cfg.dynamic_inputs
+        # # Collapse all input and target features to a single list, 
+        # # to check for 'QObs(mm/d)' (river flow, the target variable).
+        # all_features = self.cfg.target_variables
+        # if isinstance(self.cfg.dynamic_inputs, dict):
+        #     for val in self.cfg.dynamic_inputs.values():
+        #         all_features = all_features + val
+        # elif isinstance(self.cfg.dynamic_inputs, list):
+        #     all_features = all_features + self.cfg.dynamic_inputs
 
-        # catch also QObs(mm/d)_shiftX or _copyX features
-        if any([x.startswith("QObs(mm/d)") for x in all_features]):
-            # add daily discharge from CAMELS, using daymet to get basin area
-            _, area = dailydata.load_daily_forcings(self.cfg.data_dir, basin, "daymet")
-            discharge = dailydata.load_daily_discharge(self.cfg.data_dir, basin, area)
-            discharge = discharge.resample('1H').ffill()
-            df["QObs(mm/d)"] = discharge
+        # # catch also QObs(mm/d)_shiftX or _copyX features
+        # if any([x.startswith("QObs(mm/d)") for x in all_features]):
+        #     # add daily discharge from CAMELS, using daymet to get basin area
+        #     _, area = dailydata.load_daily_forcings(self.cfg.data_dir, basin, "daymet")
+        #     discharge = dailydata.load_daily_discharge(self.cfg.data_dir, basin, area)
+        #     discharge = discharge.resample('1H').ffill()
+        #     df["QObs(mm/d)"] = discharge
 
         # only warn for missing netcdf files once for each forcing product
         self._warn_slow_loading = False
